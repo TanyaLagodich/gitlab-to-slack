@@ -1,0 +1,26 @@
+{
+  "name": "gitlab-to-slack",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "ngrok": "ngrok http --domain=robust-tahr-emerging.ngrok-free.app 80"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TanyaLagodich/gitlab-to-slack.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TanyaLagodich/gitlab-to-slack/issues"
+  },
+  "homepage": "https://github.com/TanyaLagodich/gitlab-to-slack#readme",
+  "dependencies": {
+    "axios": "^1.5.1",
+    "express": "^4.18.2",
+    "ngrok": "^5.0.0-beta.2"
+  }
+}
