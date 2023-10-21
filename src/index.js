@@ -26,28 +26,32 @@ app.post('/gitlab-webhook', async (req, res) => {
         const currentMessage = (messages.find(msg => msg.text.includes(mergeRequestUrl)));
 
         const action = req.body.object_attributes.action;
-        console.log({ currentMessage })
 
         if (action === 'unapproved') {
             const threadMessages = await SlackApi.getMessageThread({
                 channel: currentChannel.id, ts: currentMessage.ts,
             });
-            console.log({ threadMessages });
             // TODO change searching from text to bot type
+            const promises = [];
             const botThreadMessage = threadMessages.find((msg) => msg.text === 'Молодец! Получил аппрув к своему мр!');
             if (botThreadMessage) {
-                await SlackApi.removeMessage({ channel: currentChannel.id, ts: botThreadMessage.ts });
+                promises.push(SlackApi.removeMessage({ channel: currentChannel.id, ts: botThreadMessage.ts }));
             }
-            await SlackApi.removeReaction({
-                channel: currentChannel.id, name: 'white_check_mark', timestamp: currentMessage.ts,
-            });
+            Promise.all([
+                ...promises,
+                await SlackApi.removeReaction({
+                    channel: currentChannel.id, name: 'white_check_mark', timestamp: currentMessage.ts,
+                }),
+            ]);
         } else {
-            await SlackApi.addReaction({
-                channel: currentChannel.id, name: 'white_check_mark', timestamp: currentMessage.ts,
-            })
-            await SlackApi.addMessageToThread({
-                channel: currentChannel.id, thread_ts: currentMessage.ts, text: 'Молодец! Получил аппрув к своему мр!',
-            })
+            Promise.all([
+                SlackApi.addReaction({
+                    channel: currentChannel.id, name: 'white_check_mark', timestamp: currentMessage.ts,
+                }),
+                SlackApi.addMessageToThread({
+                    channel: currentChannel.id, thread_ts: currentMessage.ts, text: 'Молодец! Получил аппрув к своему мр!',
+                }),
+            ]);
         }
     }
     // if (req.body.event_name === GITLAB_EVENTS.PUSH) {
