@@ -35,6 +35,10 @@ class SlackApi extends HttpApi {
         await this.post({ endpoint: 'chat.postMessage', data: { channel, thread_ts, text } });
     }
 
+    async sendNewMessage({ channel, text }) {
+        await this.post({ endpoint: 'chat.postMessage', data: { channel, text } });
+    }
+
     async getMessageThread({ channel, ts }) {
         const { data } = await this.get({ endpoint: 'conversations.replies', params: { channel, ts } });
         return data.messages;

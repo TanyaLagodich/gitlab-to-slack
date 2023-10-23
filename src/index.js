@@ -1,8 +1,9 @@
 const express = require('express');
+const crypto = require('crypto');
 const app = express();
 const PORT = 80;
 const SlackApi = require('./api/slack');
-const axios = require('axios');
+const AsanaApi = require('./api/asana');
 
 const GITLAB_EVENTS = require("./constants/GITLAB_EVENTS");
 
@@ -11,6 +12,61 @@ app.use(express.json());
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });
+
+
+let secret = '';
+
+// TODO work on this function, refactor it and refactor logic sending message in slack
+app.post('/asana-webhook', async (req, res) => {
+    console.log('webhook', req.body.events);
+    if (req.headers["x-hook-secret"]) {
+        console.log("This is a new webhook");
+        secret = req.headers["x-hook-secret"];
+
+        res.setHeader("X-Hook-Secret", secret);
+        res.sendStatus(200);
+    } else if (req.headers["x-hook-signature"]) {
+        console.log('this is an existed webhook');
+        const computedSignature = crypto
+            .createHmac("SHA256", secret)
+            .update(JSON.stringify(req.body))
+            .digest("hex");
+
+        console.log({ computedSignature });
+        if (
+            !crypto.timingSafeEqual(
+                Buffer.from(req.headers["x-hook-signature"]),
+                Buffer.from(computedSignature)
+            )
+        ) {
+            console.log('FAIL');
+            // Fail
+            res.sendStatus(401);
+        } else {
+            console.log('SUCCESS');
+            // Success
+            res.sendStatus(200);
+            console.log(`Events on ${Date()}:`);
+            console.log(req.body.events);
+            if (req.body.events[0]) {
+                const { parent } = req.body.events[0];
+                const task = await AsanaApi.getTaskByGid({ gid: parent.gid });
+                console.log('task', { task }, task.custom_fields[2].display_value);
+                if (task.memberships[0].section.name === 'code review') {
+                    await SlackApi.sendNewMessage({
+                        channel: 'C0623GY4DQU',
+                        text: `:information_source: "Code review"
+Ссылка на MR в описании задачи -- ${task.name}
+                ${task.permalink_url }
+                mr - ${task.custom_fields[2].display_value}`
+                    });
+                }
+            }
+        }
+    } else {
+        console.error("Something went wrong!");
+    }
+})
 
 app.post('/gitlab-webhook', async (req, res) => {
     // console.log('Received a webhook from GitLab:', req.body);
@@ -71,14 +127,8 @@ app.listen(PORT, async () => {
 });
 
 
-// get al private chanel and find needed one
-// https://slack.com/api/conversations.list?types=private_channel
-
-// get all message from group with id channel=C0623GY4DQU
-//https://slack.com/api/conversations.history?channel=C0623GY4DQU
-
-// post add msg to thread, channel, ts parent message text
-// https://slack.com/api/chat.postMessage?channel=C0623GY4DQU&thread_ts=1697784163.714119&text=Approve
-
-// post add reaction to a msg channel, name of emoji, timestamp - ts of msg
-// https://slack.com/api/reactions.add?channel=C0623GY4DQU&name=thumbsup&timestamp=1697784163.714119
+// asana steps
+// 1) post  to enable webhook
+// https://app.asana.com/api/1.0/webhooks
+// send data
+// answer with correct headers
