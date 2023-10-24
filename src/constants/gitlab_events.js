@@ -1,6 +1,6 @@
-const GITLAB_EVENTS = {
+const Gitlab_events = {
     PUSH: 'push',
     MERGE_REQUEST: 'merge_request',
 }
 
-module.exports = GITLAB_EVENTS;
+module.exports = Gitlab_events;

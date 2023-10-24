@@ -12,9 +12,30 @@ class AsanaApi extends HttpApi {
         });
     }
 
+    async enableWebhook() {
+        await this.post({ endpoint: 'webhooks', data: {
+            data: {
+                filters: [
+                    {
+                        action: 'added',
+                        resource_type: 'story',
+                        resource_subtype: 'section_changed',
+                    },
+                    {
+                        action: 'changed',
+                        resource_type: 'story',
+                        resource_subtype: 'section_changed',
+                    }
+                ],
+                // TODO think how to get this gid by request
+                resource: '1205772287381976',
+                target: process.env.ASANA_TARGET,
+            }
+        }})
+    }
+
     async getTaskByGid({ gid }) {
         const { data } =  await this.get({ endpoint: `tasks/${gid}` });
-        console.log('data', data);
         return data.data;
     }
 }
