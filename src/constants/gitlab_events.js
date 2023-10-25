@@ -1,5 +1,5 @@
 const Gitlab_events = {
-    PUSH: 'push',
+    NOTE: 'note',
     MERGE_REQUEST: 'merge_request',
 }
 
