@@ -1,6 +1,4 @@
 const { Router } = require('express');
-const crypto = require('crypto');
-const AsanaApi = require("../api/asana");
 const AsanaController = require('../controllers/asana');
 
 const asanaRouter = Router();
